@@ -1,0 +1,25 @@
+body {
+  font: 100% Helvetica, sans-serif;
+  background-color: #efefef;
+}
+
+img {
+    max-width: 75%;
+}
+
+.titleCenter {
+    text-align: center;
+}
+
+.contentDiv {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.subtext {
+    font-style: italic;
+    font-size: .8rem;
+    margin-top: .5rem
+}
