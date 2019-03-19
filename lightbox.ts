@@ -81,6 +81,7 @@ export class Kloudbox {
                     break;
             }
         }
+        this.getAllImages().forEach(image => image.style.cursor = "zoom-in")
 
         window.onkeyup = handleKeyUp;
     }
@@ -102,6 +103,8 @@ export class Kloudbox {
         if (!this.scoped) {
             Array.from(document.getElementsByTagName("img")).forEach(el => el.classList.add(classes.default));
         }
+
+        this.getAllImages().forEach(image => image.style.cursor = "zoom-in")
     }
 
     private handleLightBox = (image: HTMLImageElement, enter = false) => {
@@ -116,6 +119,7 @@ export class Kloudbox {
             let left = this.getArrows()[1];
             right.classList.add(classes.arrowRight);
             left.classList.add(classes.arrowLeft);
+            this.getArrows().forEach(arr => arr.style.cursor = "pointer");
 
             right.addEventListener("click", ev => this.handleLightBox(this.getNextImage(this.lightBoxCurrent.original)));
             left.addEventListener("click", ev => this.handleLightBox(this.getPrevImage(this.lightBoxCurrent.original));
@@ -124,6 +128,7 @@ export class Kloudbox {
         this.lightBoxCurrent = new ImageHolder(image, image.cloneNode() as HTMLImageElement);
         this.lightBoxCurrent.clone.classList.add(classes.lightBoxImage);
         this.lightBoxCurrent.clone.classList.remove(classes.default);
+        this.lightBoxCurrent.clone.style.cursor = "default";
         body.appendChild(this.lightBoxCurrent.clone);
 
         if (enter) {
