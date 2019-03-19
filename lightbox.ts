@@ -1,20 +1,12 @@
 const classes = {
-    default: "imgStyle",
+    default: "kloudBoxDefault",
     lightBoxImage: "lightBoxStyleImg",
     lightBoxDiv: "lightBoxStyleDiv"
 }
 
 const LEFT_ARROW = 37;
-const UP_ARROW = 38;
 const RIGHT_ARROW = 39;
-const DOWN_ARROW = 40;
 const ESCAPE = 27;
-
-
-let inLightBox = false;
-const opaqueDiv = document.createElement("div") as HTMLDivElement;
-opaqueDiv.classList.add(classes.lightBoxDiv);
-let lightBoxCurrent: ImageHolder;
 
 class ImageHolder {
     public original: HTMLImageElement;
@@ -26,73 +18,121 @@ class ImageHolder {
     }
 }
 
-document.addEventListener("click", (ev) => {
-    if (ev.target instanceof HTMLImageElement && !inLightBox) {
-        inLightBox = true;
-        handleLightBox(ev.target as HTMLImageElement, true);
+export class Kloudbox {
+    private inLightBox = false;
+    private opaqueDiv = document.createElement("div") as HTMLDivElement;
+    private lightBoxCurrent: ImageHolder;
+    private scoped: boolean;
+    private scope?: string;
+
+    constructor(targetImg?: string) {
+        this.scoped = targetImg != undefined;
+        this.scope = targetImg;
+        if (!this.scoped) {
+            Array.from(document.getElementsByTagName("img")).forEach(el => el.classList.add(classes.default));
+        }
+
+        this.opaqueDiv.classList.add(classes.lightBoxDiv);
+        document.addEventListener("click", (ev) => {
+            if (!this.checkResponsible(ev.target)) {
+                return;
+            }
+
+            if (ev.target instanceof HTMLImageElement && !this.inLightBox) {
+                this.inLightBox = true;
+                this.handleLightBox(ev.target as HTMLImageElement, true);
+            }
+
+            if (ev.target instanceof HTMLDivElement && ev.target as HTMLDivElement == this.opaqueDiv) {
+                this.handleLightBoxLeave();
+            }
+        });
+
+        const handleKeyUp = (ev: KeyboardEvent) => {
+            if (!this.inLightBox) {
+                return;
+            }
+
+            switch (ev.keyCode) {
+                case RIGHT_ARROW:
+                    this.handleLightBox(this.getNextImage(this.lightBoxCurrent.original));
+                    break;
+                case LEFT_ARROW:
+                    this.handleLightBox(this.getPrevImage(this.lightBoxCurrent.original));
+                    break;
+                case ESCAPE:
+                    this.handleLightBoxLeave();
+                    break;
+            }
+        }
+
+        window.onkeyup = handleKeyUp;
     }
 
-    if (ev.target instanceof HTMLDivElement && ev.target as HTMLDivElement == opaqueDiv) {
-        handleLightBoxLeave();
-    }
-});
+    /**
+     * this function allows you to refresh the Kloudbox and pass it a new scope. Usefull if you loaded new images since this object was created
+     * 
+     * @param newScope Optional new scope
+     */
+    public refresh = (newScope?: string) => {
+        if (newScope != undefined) {
+            this.scope = newScope;
+        }
 
-const handleKeyUp = (ev: KeyboardEvent) => {
-    if (!inLightBox) {
-        return;
-    }
+        if (this.scoped) {
+            return;
+        }
 
-    switch (ev.keyCode) {
-        case RIGHT_ARROW:
-            handleLightBox(getNextImage(lightBoxCurrent.original));
-            break;
-        case LEFT_ARROW:
-            handleLightBox(getPrevImage(lightBoxCurrent.original));
-            break;
-        case ESCAPE:
-            handleLightBoxLeave();
-            break;
-    }
-}
-
-window.onkeyup = handleKeyUp;
-
-const handleLightBox = (image: HTMLImageElement, enter = false) => {
-    if (!enter) {
-        removeFromDom(lightBoxCurrent.clone);
+        if (!this.scoped) {
+            Array.from(document.getElementsByTagName("img")).forEach(el => el.classList.add(classes.default));
+        }
     }
 
-    const body = document.getElementsByTagName("body")[0];
-    lightBoxCurrent = new ImageHolder(image, image.cloneNode() as HTMLImageElement);
-    lightBoxCurrent.clone.classList.add(classes.lightBoxImage);
-    lightBoxCurrent.clone.classList.remove(classes.default);
+    public handleLightBox = (image: HTMLImageElement, enter = false) => {
+        if (!enter) {
+            this.removeFromDom(this.lightBoxCurrent.clone);
+        }
+
+        const body = document.getElementsByTagName("body")[0];
+        this.lightBoxCurrent = new ImageHolder(image, image.cloneNode() as HTMLImageElement);
+        this.lightBoxCurrent.clone.classList.add(classes.lightBoxImage);
+        this.lightBoxCurrent.clone.classList.remove(classes.default);
 
 
-    body.appendChild(lightBoxCurrent.clone);
-    body.appendChild(opaqueDiv);
+        body.appendChild(this.lightBoxCurrent.clone);
+        body.appendChild(this.opaqueDiv);
+    }
+
+    private getNextImage = (current: HTMLImageElement): HTMLImageElement => {
+        const images = this.getAllImages();
+        return images[(images.indexOf(current) + 1) % images.length];
+    }
+
+    private getPrevImage = (current: HTMLImageElement): HTMLImageElement => {
+        const images = this.getAllImages();
+        return images[(images.indexOf(current) + images.length - 1) % images.length]
+    }
+
+    private getAllImages = (): HTMLImageElement[] => {
+        const className = this.scoped ? this.scope : classes.default;
+        return Array.from(document.getElementsByClassName(className)).map(el => el as HTMLImageElement);
+    }
+
+    private handleLightBoxLeave = () => {
+        this.removeFromDom(this.opaqueDiv);
+        this.removeFromDom(this.lightBoxCurrent.clone);
+
+        this.inLightBox = false;
+    }
+
+    private removeFromDom = (html: HTMLElement) => {
+        html.parentElement.removeChild(html);
+    }
+
+    private checkResponsible = (it: EventTarget) => {
+        return it instanceof HTMLElement && this.scoped ? (it as HTMLElement).classList.contains(this.scope) : true;
+    }
+
 }
 
-const getNextImage = (current: HTMLImageElement): HTMLImageElement => {
-    const images = getAllImages();
-    return images[(images.indexOf(current) + 1) % images.length];
-}
-
-const getPrevImage = (current: HTMLImageElement): HTMLImageElement => {
-    const images = getAllImages();
-    return images[(images.indexOf(current) + images.length - 1) % images.length]
-}
-
-const getAllImages = (): HTMLImageElement[] => {
-    return Array.from(document.getElementsByClassName(classes.default)).map(el => el as HTMLImageElement);
-}
-
-const handleLightBoxLeave = () => {
-    removeFromDom(opaqueDiv);
-    removeFromDom(lightBoxCurrent.clone);
-
-    inLightBox = false;
-}
-
-const removeFromDom = (html: HTMLElement) => {
-    html.parentElement.removeChild(html);
-}
+const lb = new Kloudbox("defaultLb");
