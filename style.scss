@@ -1,5 +1,12 @@
 @import 'reset.scss';
 
+@mixin transform($property) {
+    -webkit-transform: $property;
+    -ms-transform: $property;
+    -moz-transform: $property;
+    transform: $property;
+  }
+
 body {
   font: 100% Helvetica, sans-serif;
   background-color: #efefef;
@@ -56,10 +63,24 @@ h1 {
     color: white;
 }
 
+.arrowSvg {
+    color: white;
+    position: fixed;
+    z-index: 2;
+    top: 50%;
+    max-width: 5%;
+}
+
+.arrowSvgLeft {
+    left: 0vw;
+    @include transform(scaleX(-1));
+}
+
 .arrowSvgRight {
     position: fixed;
     z-index: 2;
     top: 50%;
+    left: 95vw;
 }
 
 .hidden {

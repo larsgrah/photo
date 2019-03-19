@@ -1,8 +1,23 @@
 const classes = {
     default: "kloudBoxDefault",
     lightBoxImage: "lightBoxStyleImg",
-    lightBoxDiv: "lightBoxStyleDiv"
+    lightBoxDiv: "lightBoxStyleDiv",
+    arrow: "arrowSvg",
+    arrowRight: "arrowSvgRight",
+    arrowLeft: "arrowSvgLeft"
 }
+const arrowHtml = `<svg class="arrowSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
+<defs id="defs3051">
+    <style type="text/css" id="current-color-scheme">
+        .ColorScheme-Text {
+            color: #fffff;
+        }
+    </style>
+</defs>
+<path style="fill:currentColor;fill-opacity:1;stroke:none"
+    d="m7.707031 3l-.707031.707031 6.125 6.125 1.167969 1.167969-1.167969 1.167969-6.125 6.125.707031.707031 6.125-6.125 1.875-1.875-1.875-1.875-6.125-6.125"
+    class="ColorScheme-Text"></path>
+</svg>`
 
 const LEFT_ARROW = 37;
 const RIGHT_ARROW = 39;
@@ -34,6 +49,11 @@ export class Kloudbox {
 
         this.opaqueDiv.classList.add(classes.lightBoxDiv);
         document.addEventListener("click", (ev) => {
+
+            if (ev.target instanceof HTMLDivElement && ev.target as HTMLDivElement == this.opaqueDiv) {
+                this.handleLightBoxLeave();
+            }
+
             if (!this.checkResponsible(ev.target)) {
                 return;
             }
@@ -41,10 +61,6 @@ export class Kloudbox {
             if (ev.target instanceof HTMLImageElement && !this.inLightBox) {
                 this.inLightBox = true;
                 this.handleLightBox(ev.target as HTMLImageElement, true);
-            }
-
-            if (ev.target instanceof HTMLDivElement && ev.target as HTMLDivElement == this.opaqueDiv) {
-                this.handleLightBoxLeave();
             }
         });
 
@@ -88,19 +104,31 @@ export class Kloudbox {
         }
     }
 
-    public handleLightBox = (image: HTMLImageElement, enter = false) => {
+    private handleLightBox = (image: HTMLImageElement, enter = false) => {
+        const body = document.getElementsByTagName("body")[0];
+
         if (!enter) {
             this.removeFromDom(this.lightBoxCurrent.clone);
+        } else {
+            body.insertAdjacentHTML("beforeend", arrowHtml);
+            body.insertAdjacentHTML("beforeend", arrowHtml);
+            let right = this.getArrows()[0];
+            let left = this.getArrows()[1];
+            right.classList.add(classes.arrowRight);
+            left.classList.add(classes.arrowLeft);
+
+            right.addEventListener("click", ev => this.handleLightBox(this.getNextImage(this.lightBoxCurrent.original)));
+            left.addEventListener("click", ev => this.handleLightBox(this.getPrevImage(this.lightBoxCurrent.original));
         }
 
-        const body = document.getElementsByTagName("body")[0];
         this.lightBoxCurrent = new ImageHolder(image, image.cloneNode() as HTMLImageElement);
         this.lightBoxCurrent.clone.classList.add(classes.lightBoxImage);
         this.lightBoxCurrent.clone.classList.remove(classes.default);
-
-
         body.appendChild(this.lightBoxCurrent.clone);
-        body.appendChild(this.opaqueDiv);
+
+        if (enter) {
+            body.appendChild(this.opaqueDiv);
+        }
     }
 
     private getNextImage = (current: HTMLImageElement): HTMLImageElement => {
@@ -118,10 +146,14 @@ export class Kloudbox {
         return Array.from(document.getElementsByClassName(className)).map(el => el as HTMLImageElement);
     }
 
+    private getArrows = (): HTMLElement[] => {
+        return Array.from(document.getElementsByClassName(classes.arrow)).map(it => it as HTMLElement);
+    }
+
     private handleLightBoxLeave = () => {
         this.removeFromDom(this.opaqueDiv);
         this.removeFromDom(this.lightBoxCurrent.clone);
-
+        this.getArrows().forEach(it => this.removeFromDom(it))
         this.inLightBox = false;
     }
 
@@ -135,4 +167,4 @@ export class Kloudbox {
 
 }
 
-const lb = new Kloudbox("defaultLb");
+const lb = new Kloudbox();
