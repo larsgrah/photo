@@ -122,7 +122,7 @@ export class Kloudbox {
             this.getArrows().forEach(arr => arr.style.cursor = "pointer");
 
             right.addEventListener("click", ev => this.handleLightBox(this.getNextImage(this.lightBoxCurrent.original)));
-            left.addEventListener("click", ev => this.handleLightBox(this.getPrevImage(this.lightBoxCurrent.original));
+            left.addEventListener("click", ev => this.handleLightBox(this.getPrevImage(this.lightBoxCurrent.original)));
         }
 
         this.lightBoxCurrent = new ImageHolder(image, image.cloneNode() as HTMLImageElement);
